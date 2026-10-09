@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyCast – Your Weather, Simplified</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+    color: white;
+    background: linear-gradient(135deg, #061c68, #087ce5, #071957);
+}
+
+.container {
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+}
+
+.logo {
+    font-size: 38px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #c7ddff;
+    margin-bottom: 28px;
+}
+
+.search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    flex: 1;
+    min-width: 0;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    outline: none;
+    font-size: 15px;
+}
+
+.search-box button {
+    padding: 14px 18px;
+    border: none;
+    border-radius: 12px;
+    background: #12d4ee;
+    color: #06245b;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.search-box button:hover {
+    background: #8af3ff;
+}
+
+.search-box button:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
+.search-box input:focus-visible,
+.search-box button:focus-visible {
+    outline: 3px solid #8af3ff;
+    outline-offset: 3px;
+}
+
+.weather-card {
+    padding: 25px;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(12px);
+}
+
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+.city {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.date {
+    color: #c9ddff;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.icon {
+    font-size: 55px;
+}
+
+.temperature {
+    font-size: 68px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.description {
+    font-size: 18px;
+    margin-bottom: 25px;
+}
+
+.details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.detail {
+    padding: 15px 5px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.detail-icon {
+    font-size: 25px;
+    margin-bottom: 10px;
+}
+
+.detail-name {
+    color: #c9ddff;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.message {
+    margin-top: 15px;
+    color: #d8e9ff;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+.message.error {
+    color: #ffd0d0;
+}
+
+footer {
+    margin-top: 20px;
+    color: #c9ddff;
+    font-size: 12px;
+}
+
+@media (max-width: 420px) {
+    .logo {
+        font-size: 30px;
+    }
+
+    .weather-card {
+        padding: 18px 12px;
+    }
+
+    .temperature {
+        font-size: 55px;
+    }
+
+    .detail-value {
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">☀️ SkyCast</div>
+    <p class="subtitle">Your Weather, Simplified</p>
+
+    <form class="search-box" id="searchForm">
+        <input
+            type="text"
+            id="cityInput"
+            placeholder="Search city..."
+            value="Bengaluru"
+            aria-label="City name"
+            required
+        >
+        <button id="searchButton" type="submit">Search</button>
+    </form>
+
+    <div class="weather-card" aria-live="polite">
+
+        <div class="top">
+            <div>
+                <div class="city" id="city">Bengaluru, India</div>
+                <div class="date" id="date"></div>
+            </div>
+            <div class="icon" id="icon">🌤️</div>
+        </div>
+
+        <div class="temperature" id="temperature">--°C</div>
+        <div class="description" id="description">
+            Search for a city
+        </div>
+
+        <div class="details">
+
+            <div class="detail">
+                <div class="detail-icon">💧</div>
+                <div class="detail-name">Humidity</div>
+                <div class="detail-value" id="humidity">--%</div>
+            </div>
+
+            <div class="detail">
+                <div class="detail-icon">💨</div>
+                <div class="detail-name">Wind Speed</div>
+                <div class="detail-value" id="wind">-- km/h</div>
+            </div>
+
+            <div class="detail">
+                <div class="detail-icon">🌡️</div>
+                <div class="detail-name">Feels Like</div>
+                <div class="detail-value" id="feels">--°C</div>
+            </div>
+
+        </div>
+
+        <p class="message" id="message" role="status"></p>
+    </div>
+
+    <footer>
+        SkyCast Weather Dashboard | Powered by Open-Meteo
+    </footer>
+
+</div>
+
+<script>
+const form = document.getElementById("searchForm");
+const input = document.getElementById("cityInput");
+const searchButton = document.getElementById("searchButton");
+const message = document.getElementById("message");
+
+document.getElementById("date").textContent =
+    new Date().toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+
+function weatherInfo(code) {
+    if (code === 0) return ["☀️", "Clear sky"];
+    if ([1, 2].includes(code)) return ["🌤️", "Mostly clear"];
+    if (code === 3) return ["☁️", "Overcast"];
+    if ([45, 48].includes(code)) return ["🌫️", "Foggy"];
+    if ([51, 53, 55, 56, 57].includes(code))
+        return ["🌦️", "Drizzle"];
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code))
+        return ["🌧️", "Rainy"];
+    if ([71, 73, 75, 77, 85, 86].includes(code))
+        return ["❄️", "Snowy"];
+    if ([95, 96, 99].includes(code))
+        return ["⛈️", "Thunderstorm"];
+
+    return ["🌤️", "Variable weather"];
+}
+
+async function getWeather(cityName) {
+    searchButton.disabled = true;
+    message.classList.remove("error");
+    message.textContent = "Loading weather...";
+
+    try {
+        const geoUrl =
+            "https://geocoding-api.open-meteo.com/v1/search?name=" +
+            encodeURIComponent(cityName) +
+            "&count=1&language=en&format=json";
+
+        const geoResponse = await fetch(geoUrl);
+
+        if (!geoResponse.ok) {
+            throw new Error("City search is temporarily unavailable. Please try again.");
+        }
+
+        const geoData = await geoResponse.json();
+
+        if (!geoData.results || geoData.results.length === 0) {
+            throw new Error("City not found. Please try another city.");
+        }
+
+        const place = geoData.results[0];
+
+        const weatherUrl =
+            "https://api.open-meteo.com/v1/forecast?" +
+            `latitude=${place.latitude}` +
+            `&longitude=${place.longitude}` +
+            "&current=temperature_2m,relative_humidity_2m," +
+            "apparent_temperature,is_day,weather_code,wind_speed_10m" +
+            "&timezone=auto";
+
+        const weatherResponse = await fetch(weatherUrl);
+
+        if (!weatherResponse.ok) {
+            throw new Error("Weather service is temporarily unavailable. Please try again.");
+        }
+
+        const weatherData = await weatherResponse.json();
+        const current = weatherData.current;
+        if (!current || typeof current.temperature_2m !== "number") {
+            throw new Error("Weather data is unavailable for this city right now.");
+        }
+
+        const [icon, description] = weatherInfo(current.weather_code);
+
+        document.getElementById("city").textContent =
+            place.name + (place.country ? ", " + place.country : "");
+
+        document.getElementById("temperature").textContent =
+            Math.round(current.temperature_2m) + "°C";
+
+        document.getElementById("description").textContent =
+            description;
+
+        document.getElementById("icon").textContent =
+            icon === "☀️" && current.is_day === 0 ? "🌙" : icon;
+
+        document.getElementById("humidity").textContent =
+            current.relative_humidity_2m + "%";
+
+        document.getElementById("wind").textContent =
+            Math.round(current.wind_speed_10m) + " km/h";
+
+        document.getElementById("feels").textContent =
+            Math.round(current.apparent_temperature) + "°C";
+
+        message.textContent = "";
+
+    } catch (error) {
+        message.classList.add("error");
+        message.textContent = error instanceof TypeError
+            ? "Could not connect to the weather service. Check your internet connection and try again."
+            : error.message || "Weather could not be loaded. Please try again.";
+    } finally {
+        searchButton.disabled = false;
+    }
+}
+
+form.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const cityName = input.value.trim();
+
+    if (cityName) {
+        getWeather(cityName);
+    }
+});
+
+getWeather("Bengaluru");
+</script>
+
+</body>
+</html>
